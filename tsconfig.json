@@ -1,0 +1,25 @@
+{
+  "extends": "./packages/config/tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@permitpro/shared": ["packages/shared/src"],
+      "@permitpro/ui-web": ["packages/ui-web/src"],
+      "@permitpro/ui-mobile": ["packages/ui-mobile/src"],
+      "@permitpro/permit-engine": ["packages/permit-engine/src"],
+      "@permitpro/ai": ["packages/ai/src"],
+      "@permitpro/config": ["packages/config"]
+    }
+  },
+  "references": [
+    { "path": "apps/web" },
+    { "path": "apps/mobile" },
+    { "path": "apps/desktop" },
+    { "path": "packages/shared" },
+    { "path": "packages/ui-web" },
+    { "path": "packages/ui-mobile" },
+    { "path": "packages/permit-engine" },
+    { "path": "packages/ai" },
+    { "path": "packages/config" }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "PermitPro",
+    "slug": "permitpro",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "permitpro",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0F2044"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.permitpro.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "PermitPro uses the camera to scan and capture permit documents.",
+        "NSFaceIDUsageDescription": "PermitPro uses Face ID to secure your account."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0F2044"
+      },
+      "package": "com.permitpro.app",
+      "permissions": ["CAMERA", "USE_BIOMETRIC", "USE_FINGERPRINT"]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-camera",
+      "expo-document-picker",
+      "expo-notifications",
+      "expo-secure-store",
+      "expo-local-authentication",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F2044",
+          "image": "./assets/splash.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

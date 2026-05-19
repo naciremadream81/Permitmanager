@@ -1,0 +1,55 @@
+name: Release Mobile
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+env:
+  PNPM_VERSION: "9.5.0"
+  NODE_VERSION: "20"
+
+jobs:
+  build-and-submit:
+    name: Build and Submit Mobile Apps
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: ${{ env.PNPM_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "pnpm"
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Get version from tag
+        id: version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Build Android production
+        working-directory: apps/mobile
+        run: eas build --platform android --profile production --non-interactive
+
+      - name: Build iOS production
+        working-directory: apps/mobile
+        run: eas build --platform ios --profile production --non-interactive
+
+      - name: Submit to app stores
+        working-directory: apps/mobile
+        run: eas submit --platform all --non-interactive
+        env:
+          EXPO_APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}

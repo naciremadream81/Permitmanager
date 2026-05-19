@@ -1,0 +1,28 @@
+{
+  "name": "permitpro",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:web": "turbo run dev --filter=@permitpro/web",
+    "dev:mobile": "turbo run dev --filter=@permitpro/mobile",
+    "dev:desktop": "turbo run dev --filter=@permitpro/desktop",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "turbo": "^2.0.9",
+    "typescript": "^5.5.3",
+    "eslint": "^8.57.0",
+    "prettier": "^3.3.3",
+    "prettier-plugin-tailwindcss": "^0.6.5"
+  },
+  "packageManager": "pnpm@9.5.0",
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

@@ -1,0 +1,96 @@
+version: "3.9"
+
+services:
+  # ── Next.js Web Application ──────────────────
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://permitpro:permitpro@postgres:5432/permitpro
+      - UPSTASH_REDIS_REST_URL=http://redis:6379
+      - TYPESENSE_HOST=typesense
+      - TYPESENSE_PORT=8108
+      - TYPESENSE_PROTOCOL=http
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      typesense:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - permitpro
+
+  # ── PostgreSQL Database ──────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: permitpro
+      POSTGRES_PASSWORD: permitpro
+      POSTGRES_DB: permitpro
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U permitpro -d permitpro"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - permitpro
+
+  # ── Redis Cache ──────────────────────────────
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - permitpro
+
+  # ── Typesense Search Engine ──────────────────
+  typesense:
+    image: typesense/typesense:0.25.2
+    ports:
+      - "8108:8108"
+    environment:
+      TYPESENSE_API_KEY: permitpro-typesense-dev-key
+      TYPESENSE_DATA_DIR: /data
+      TYPESENSE_ENABLE_CORS: "true"
+    volumes:
+      - typesense_data:/data
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8108/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - permitpro
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  typesense_data:
+    driver: local
+
+networks:
+  permitpro:
+    driver: bridge

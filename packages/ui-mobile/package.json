@@ -1,0 +1,38 @@
+{
+  "name": "@permitpro/ui-mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --external react --external react-native",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --external react --external react-native --watch",
+    "lint": "eslint src --ext .ts,.tsx",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "nativewind": "4.0.36",
+    "react-native-reanimated": "~3.14.0",
+    "@gorhom/bottom-sheet": "^4.6.3"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-native": "^0.74.0"
+  },
+  "devDependencies": {
+    "@types/react": "~18.2.79",
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.3",
+    "eslint": "^8.57.0",
+    "@permitpro/config": "workspace:*"
+  }
+}

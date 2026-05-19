@@ -1,0 +1,27 @@
+{
+  "name": "@permitpro/config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./eslint.base.js",
+  "types": "./tsconfig.base.json",
+  "exports": {
+    "./tsconfig.base": "./tsconfig.base.json",
+    "./tailwind.base": "./tailwind.base.ts",
+    "./eslint.base": "./eslint.base.js"
+  },
+  "scripts": {
+    "lint": "eslint . --ext .js,.ts",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.17.0",
+    "@typescript-eslint/parser": "^7.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0",
+    "typescript": "^5.5.3",
+    "tailwindcss": "3.4.6"
+  }
+}

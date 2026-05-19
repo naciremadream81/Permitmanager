@@ -1,0 +1,14 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "paths": {
+      "@/*": ["./src/*"],
+      "@permitpro/shared": ["../../packages/shared/src"],
+      "@permitpro/ui-mobile": ["../../packages/ui-mobile/src"],
+      "@permitpro/permit-engine": ["../../packages/permit-engine/src"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"],
+  "exclude": ["node_modules"]
+}

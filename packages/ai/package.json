@@ -1,0 +1,35 @@
+{
+  "name": "@permitpro/ai",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts",
+    "dev": "tsup src/index.ts --format esm,cjs --dts --watch",
+    "lint": "eslint src --ext .ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "openai": "4.52.7",
+    "zod": "3.23.8",
+    "@permitpro/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "tsup": "^8.1.0",
+    "typescript": "^5.5.3",
+    "vitest": "^2.0.4",
+    "eslint": "^8.57.0",
+    "@permitpro/config": "workspace:*"
+  }
+}
