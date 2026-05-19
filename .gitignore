@@ -33,6 +33,7 @@ release/
 
 # OS
 .DS_Store
+._*
 Thumbs.db
 
 # Testing
