@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { CreateChecklistItemSchema } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validateChecklistRelations } from '@/lib/api/ownership';
 
 export async function GET(
   _req: NextRequest,
@@ -45,6 +46,9 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateChecklistItemSchema.parse(body);
+
+    const relationError = await validateChecklistRelations(data, auth.orgId, params.id);
+    if (relationError) return relationError;
 
     // Auto-assign next order
     const maxResult = await prisma.checklistItem.aggregate({

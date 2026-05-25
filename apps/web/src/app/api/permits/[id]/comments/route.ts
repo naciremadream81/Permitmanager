@@ -20,6 +20,7 @@ export async function GET(
       include: {
         user: { select: { id: true, name: true, avatar: true } },
         replies: {
+          where: { permitId: params.id },
           include: { user: { select: { id: true, name: true, avatar: true } } },
           orderBy: { createdAt: 'asc' },
         },
@@ -46,6 +47,15 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateCommentSchema.parse(body);
+
+    if (data.parentCommentId) {
+      const parentComment = await prisma.comment.findFirst({
+        where: { id: data.parentCommentId, permitId: params.id },
+        select: { id: true },
+      });
+
+      if (!parentComment) return notFound('Parent comment not found');
+    }
 
     const comment = await prisma.comment.create({
       data: { ...data, permitId: params.id, userId: auth.userId },

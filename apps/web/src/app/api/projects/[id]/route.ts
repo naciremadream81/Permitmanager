@@ -17,6 +17,7 @@ export async function GET(
       where: { id: params.id, orgId: auth.orgId },
       include: {
         permits: {
+          where: { orgId: auth.orgId },
           include: {
             assignee: { select: { id: true, name: true, avatar: true } },
             _count: { select: { documents: true, checklistItems: true } },
