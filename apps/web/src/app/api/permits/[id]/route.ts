@@ -34,7 +34,10 @@ export async function GET(
           where: { parentCommentId: null },
           include: {
             user: { select: { id: true, name: true, avatar: true } },
-            replies: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+            replies: {
+              where: { permitId: params.id },
+              include: { user: { select: { id: true, name: true, avatar: true } } },
+            },
           },
           orderBy: { createdAt: 'desc' },
           take: 20,
