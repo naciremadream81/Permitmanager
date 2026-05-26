@@ -21,7 +21,10 @@ export async function GET(
       include: {
         assignee: { select: { id: true, name: true, avatar: true } },
         completedBy: { select: { id: true, name: true } },
-        children: { include: { assignee: { select: { id: true, name: true } } } },
+        children: {
+          where: { permitId: params.id },
+          include: { assignee: { select: { id: true, name: true } } },
+        },
       },
       orderBy: { order: 'asc' },
     });
@@ -45,6 +48,13 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateChecklistItemSchema.parse(body);
+
+    if (data.parentItemId) {
+      const parent = await prisma.checklistItem.findFirst({
+        where: { id: data.parentItemId, permitId: params.id },
+      });
+      if (!parent) return notFound('Parent checklist item not found');
+    }
 
     // Auto-assign next order
     const maxResult = await prisma.checklistItem.aggregate({
