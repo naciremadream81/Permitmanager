@@ -34,8 +34,8 @@ export async function PATCH(
     // Auto-set completion fields
     const updateData: Record<string, unknown> = { ...data };
     if (data.status === ChecklistItemStatus.COMPLETED) {
-      if (!data.completedAt) updateData.completedAt = new Date().toISOString();
-      updateData.completedById = auth.userId;
+      if (!data.completedAt) updateData['completedAt'] = new Date().toISOString();
+      updateData['completedById'] = auth.userId;
     }
 
     const item = await prisma.checklistItem.update({
