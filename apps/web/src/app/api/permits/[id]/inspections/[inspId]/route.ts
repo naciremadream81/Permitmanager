@@ -20,7 +20,7 @@ export async function PATCH(
     const data = UpdateInspectionSchema.parse(body);
 
     const inspection = await prisma.inspection.update({
-      where: { id: params.inspId },
+      where: { id: params.inspId, permitId: params.id },
       data,
     });
 
@@ -51,7 +51,7 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.inspection.delete({ where: { id: params.inspId } });
+    await prisma.inspection.delete({ where: { id: params.inspId, permitId: params.id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);
