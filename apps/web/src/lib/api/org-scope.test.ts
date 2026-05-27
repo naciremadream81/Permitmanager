@@ -15,7 +15,7 @@ vi.mock('@/lib/prisma', () => ({
   },
 }));
 
-const mockedPrisma = vi.mocked(prisma);
+const mockedPrisma = vi.mocked(prisma, { deep: true });
 
 describe('org scope validators', () => {
   beforeEach(() => {
