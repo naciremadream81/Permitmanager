@@ -5,6 +5,7 @@ import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdatePermitSchema } from '@permitpro/shared';
 import { validateTransition } from '@permitpro/permit-engine';
 import { logActivity } from '@/lib/api/audit';
+import { validatePermitRelationsInOrg } from '@/lib/api/org-scope';
 
 export async function GET(
   _req: NextRequest,
@@ -34,7 +35,10 @@ export async function GET(
           where: { parentCommentId: null },
           include: {
             user: { select: { id: true, name: true, avatar: true } },
-            replies: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+            replies: {
+              where: { permitId: params.id },
+              include: { user: { select: { id: true, name: true, avatar: true } } },
+            },
           },
           orderBy: { createdAt: 'desc' },
           take: 20,
@@ -80,6 +84,9 @@ export async function PATCH(
         );
       }
     }
+
+    const relationError = await validatePermitRelationsInOrg(data, auth.orgId);
+    if (relationError) return relationError;
 
     const updated = await prisma.permit.update({
       where: { id: params.id },

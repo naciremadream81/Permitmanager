@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdateChecklistItemSchema, ChecklistItemStatus } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validateChecklistReferencesForPermit } from '@/lib/api/org-scope';
 
 export async function PATCH(
   request: NextRequest,
@@ -19,6 +20,9 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateChecklistItemSchema.parse(body);
 
+    const referenceError = await validateChecklistReferencesForPermit(data, params.id, auth.orgId);
+    if (referenceError) return referenceError;
+
     // Auto-set completion fields
     const updateData: Record<string, unknown> = { ...data };
     if (data.status === ChecklistItemStatus.COMPLETED) {
@@ -27,7 +31,7 @@ export async function PATCH(
     }
 
     const item = await prisma.checklistItem.update({
-      where: { id: params.itemId },
+      where: { id: params.itemId, permitId: params.id },
       data: updateData,
       include: { assignee: { select: { id: true, name: true, avatar: true } } },
     });
@@ -59,7 +63,7 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.checklistItem.delete({ where: { id: params.itemId } });
+    await prisma.checklistItem.delete({ where: { id: params.itemId, permitId: params.id } });
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);

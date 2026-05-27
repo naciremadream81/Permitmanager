@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { CreateCommentSchema } from '@permitpro/shared';
+import { validateCommentParentForPermit } from '@/lib/api/org-scope';
 
 export async function GET(
   _req: NextRequest,
@@ -20,6 +21,7 @@ export async function GET(
       include: {
         user: { select: { id: true, name: true, avatar: true } },
         replies: {
+          where: { permitId: params.id },
           include: { user: { select: { id: true, name: true, avatar: true } } },
           orderBy: { createdAt: 'asc' },
         },
@@ -46,6 +48,9 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateCommentSchema.parse(body);
+
+    const parentError = await validateCommentParentForPermit(data.parentCommentId, params.id);
+    if (parentError) return parentError;
 
     const comment = await prisma.comment.create({
       data: { ...data, permitId: params.id, userId: auth.userId },
