@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError } from '@/lib/api/errors';
 import { CreatePermitSchema, PermitFilterSchema } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validatePermitRelations } from '@/lib/api/permit-relations';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +67,9 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as unknown;
     const data = CreatePermitSchema.parse(body);
+
+    const relationError = await validatePermitRelations(data, auth);
+    if (relationError) return relationError;
 
     const permit = await prisma.permit.create({
       data: { ...data, orgId: auth.orgId },

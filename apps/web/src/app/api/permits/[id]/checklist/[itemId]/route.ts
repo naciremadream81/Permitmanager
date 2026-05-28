@@ -26,9 +26,14 @@ export async function PATCH(
       updateData.completedById = auth.userId;
     }
 
-    const item = await prisma.checklistItem.update({
-      where: { id: params.itemId },
+    const updateResult = await prisma.checklistItem.updateMany({
+      where: { id: params.itemId, permitId: params.id },
       data: updateData,
+    });
+    if (updateResult.count === 0) return notFound('Checklist item not found');
+
+    const item = await prisma.checklistItem.findUniqueOrThrow({
+      where: { id: params.itemId },
       include: { assignee: { select: { id: true, name: true, avatar: true } } },
     });
 
@@ -59,7 +64,11 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.checklistItem.delete({ where: { id: params.itemId } });
+    const deleteResult = await prisma.checklistItem.deleteMany({
+      where: { id: params.itemId, permitId: params.id },
+    });
+    if (deleteResult.count === 0) return notFound('Checklist item not found');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);

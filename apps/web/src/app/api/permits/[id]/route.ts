@@ -5,6 +5,7 @@ import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdatePermitSchema } from '@permitpro/shared';
 import { validateTransition } from '@permitpro/permit-engine';
 import { logActivity } from '@/lib/api/audit';
+import { validatePermitRelations } from '@/lib/api/permit-relations';
 
 export async function GET(
   _req: NextRequest,
@@ -80,6 +81,9 @@ export async function PATCH(
         );
       }
     }
+
+    const relationError = await validatePermitRelations(data, auth);
+    if (relationError) return relationError;
 
     const updated = await prisma.permit.update({
       where: { id: params.id },

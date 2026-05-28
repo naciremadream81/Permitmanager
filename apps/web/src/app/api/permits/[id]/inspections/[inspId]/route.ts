@@ -19,9 +19,14 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateInspectionSchema.parse(body);
 
-    const inspection = await prisma.inspection.update({
-      where: { id: params.inspId },
+    const updateResult = await prisma.inspection.updateMany({
+      where: { id: params.inspId, permitId: params.id },
       data,
+    });
+    if (updateResult.count === 0) return notFound('Inspection not found');
+
+    const inspection = await prisma.inspection.findUniqueOrThrow({
+      where: { id: params.inspId },
     });
 
     await logActivity({
@@ -51,7 +56,11 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.inspection.delete({ where: { id: params.inspId } });
+    const deleteResult = await prisma.inspection.deleteMany({
+      where: { id: params.inspId, permitId: params.id },
+    });
+    if (deleteResult.count === 0) return notFound('Inspection not found');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);
