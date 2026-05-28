@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdateChecklistItemSchema, ChecklistItemStatus } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validateChecklistItemRelations } from '@/lib/api/checklist-relations';
 
 export async function PATCH(
   request: NextRequest,
@@ -19,16 +20,24 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateChecklistItemSchema.parse(body);
 
+    const relationError = await validateChecklistItemRelations(data, params.id, auth);
+    if (relationError) return relationError;
+
     // Auto-set completion fields
-    const updateData: Record<string, unknown> = { ...data };
+    const updateData: typeof data & { completedById?: string } = { ...data };
     if (data.status === ChecklistItemStatus.COMPLETED) {
       if (!data.completedAt) updateData.completedAt = new Date().toISOString();
       updateData.completedById = auth.userId;
     }
 
-    const item = await prisma.checklistItem.update({
-      where: { id: params.itemId },
+    const updateResult = await prisma.checklistItem.updateMany({
+      where: { id: params.itemId, permitId: params.id },
       data: updateData,
+    });
+    if (updateResult.count === 0) return notFound('Checklist item not found');
+
+    const item = await prisma.checklistItem.findUniqueOrThrow({
+      where: { id: params.itemId },
       include: { assignee: { select: { id: true, name: true, avatar: true } } },
     });
 
@@ -59,7 +68,11 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.checklistItem.delete({ where: { id: params.itemId } });
+    const deleteResult = await prisma.checklistItem.deleteMany({
+      where: { id: params.itemId, permitId: params.id },
+    });
+    if (deleteResult.count === 0) return notFound('Checklist item not found');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);
