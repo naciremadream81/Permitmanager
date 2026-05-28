@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import type { AuthContext } from '@/lib/api/auth';
 import { notFound } from '@/lib/api/errors';

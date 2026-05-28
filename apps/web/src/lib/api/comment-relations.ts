@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { notFound } from '@/lib/api/errors';
 
