@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { CreateCommentSchema } from '@permitpro/shared';
+import { validateCommentRelations } from '@/lib/api/comment-relations';
 
 export async function GET(
   _req: NextRequest,
@@ -46,6 +47,9 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateCommentSchema.parse(body);
+
+    const relationError = await validateCommentRelations(data, params.id);
+    if (relationError) return relationError;
 
     const comment = await prisma.comment.create({
       data: { ...data, permitId: params.id, userId: auth.userId },
