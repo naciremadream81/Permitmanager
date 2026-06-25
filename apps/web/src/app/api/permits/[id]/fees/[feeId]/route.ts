@@ -19,19 +19,14 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateFeeSchema.parse(body);
 
-    const fee = await prisma.$transaction(async (tx) => {
-      const updateResult = await tx.fee.updateMany({
-        where: { id: params.feeId, permitId: params.id },
-        data,
-      });
+    const updateResult = await prisma.fee.updateMany({
+      where: { id: params.feeId, permitId: params.id },
+      data,
+    });
+    if (updateResult.count !== 1) return notFound('Fee not found');
 
-      if (updateResult.count !== 1) {
-        return null;
-      }
-
-      return tx.fee.findFirst({
-        where: { id: params.feeId, permitId: params.id },
-      });
+    const fee = await prisma.fee.findFirst({
+      where: { id: params.feeId, permitId: params.id },
     });
     if (!fee) return notFound('Fee not found');
 

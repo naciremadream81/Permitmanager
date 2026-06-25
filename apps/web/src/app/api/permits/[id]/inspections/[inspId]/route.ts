@@ -19,19 +19,14 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateInspectionSchema.parse(body);
 
-    const inspection = await prisma.$transaction(async (tx) => {
-      const updateResult = await tx.inspection.updateMany({
-        where: { id: params.inspId, permitId: params.id },
-        data,
-      });
+    const updateResult = await prisma.inspection.updateMany({
+      where: { id: params.inspId, permitId: params.id },
+      data,
+    });
+    if (updateResult.count !== 1) return notFound('Inspection not found');
 
-      if (updateResult.count !== 1) {
-        return null;
-      }
-
-      return tx.inspection.findFirst({
-        where: { id: params.inspId, permitId: params.id },
-      });
+    const inspection = await prisma.inspection.findFirst({
+      where: { id: params.inspId, permitId: params.id },
     });
     if (!inspection) return notFound('Inspection not found');
 

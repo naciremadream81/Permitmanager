@@ -30,24 +30,19 @@ export async function PATCH(
     // Auto-set completion fields
     const updateData: Record<string, unknown> = { ...data };
     if (data.status === ChecklistItemStatus.COMPLETED) {
-      if (!data.completedAt) updateData.completedAt = new Date().toISOString();
-      updateData.completedById = auth.userId;
+      if (!data.completedAt) updateData['completedAt'] = new Date().toISOString();
+      updateData['completedById'] = auth.userId;
     }
 
-    const item = await prisma.$transaction(async (tx) => {
-      const updateResult = await tx.checklistItem.updateMany({
-        where: { id: params.itemId, permitId: params.id },
-        data: updateData,
-      });
+    const updateResult = await prisma.checklistItem.updateMany({
+      where: { id: params.itemId, permitId: params.id },
+      data: updateData,
+    });
+    if (updateResult.count !== 1) return notFound('Checklist item not found');
 
-      if (updateResult.count !== 1) {
-        return null;
-      }
-
-      return tx.checklistItem.findFirst({
-        where: { id: params.itemId, permitId: params.id },
-        include: { assignee: { select: { id: true, name: true, avatar: true } } },
-      });
+    const item = await prisma.checklistItem.findFirst({
+      where: { id: params.itemId, permitId: params.id },
+      include: { assignee: { select: { id: true, name: true, avatar: true } } },
     });
     if (!item) return notFound('Checklist item not found');
 

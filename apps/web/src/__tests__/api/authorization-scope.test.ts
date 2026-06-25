@@ -4,11 +4,6 @@ import { POST as createPermit } from '@/app/api/permits/route';
 import { POST as createComment } from '@/app/api/permits/[id]/comments/route';
 
 const mocks = vi.hoisted(() => {
-  const checklistItemTransaction = {
-    updateMany: vi.fn(),
-    findFirst: vi.fn(),
-  };
-
   return {
     auth: {
       userId: '11111111-1111-1111-1111-111111111111',
@@ -17,11 +12,7 @@ const mocks = vi.hoisted(() => {
       role: 'OWNER',
       name: 'Owner',
     },
-    checklistItemTransaction,
     prisma: {
-      $transaction: vi.fn(async (
-        callback: (tx: { checklistItem: typeof checklistItemTransaction }) => Promise<unknown>,
-      ) => callback({ checklistItem: checklistItemTransaction })),
       permit: {
         findFirst: vi.fn(),
         create: vi.fn(),
@@ -30,6 +21,10 @@ const mocks = vi.hoisted(() => {
         findFirst: vi.fn(),
       },
       orgMembership: {
+        findFirst: vi.fn(),
+      },
+      checklistItem: {
+        updateMany: vi.fn(),
         findFirst: vi.fn(),
       },
       comment: {
@@ -72,7 +67,7 @@ describe('API authorization scoping', () => {
   });
 
   it('does not update a checklist item unless it belongs to the route permit', async () => {
-    mocks.checklistItemTransaction.updateMany.mockResolvedValue({ count: 0 });
+    mocks.prisma.checklistItem.updateMany.mockResolvedValue({ count: 0 });
 
     const response = await patchChecklistItem(
       jsonRequest({ status: 'COMPLETED' }) as never,
@@ -85,7 +80,7 @@ describe('API authorization scoping', () => {
     );
 
     expect(response.status).toBe(404);
-    expect(mocks.checklistItemTransaction.updateMany).toHaveBeenCalledWith({
+    expect(mocks.prisma.checklistItem.updateMany).toHaveBeenCalledWith({
       where: {
         id: '44444444-4444-4444-4444-444444444444',
         permitId: '33333333-3333-3333-3333-333333333333',
@@ -95,7 +90,7 @@ describe('API authorization scoping', () => {
         completedById: mocks.auth.userId,
       }),
     });
-    expect(mocks.checklistItemTransaction.findFirst).not.toHaveBeenCalled();
+    expect(mocks.prisma.checklistItem.findFirst).not.toHaveBeenCalled();
     expect(mocks.logActivity).not.toHaveBeenCalled();
   });
 
