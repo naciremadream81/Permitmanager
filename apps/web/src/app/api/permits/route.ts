@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError } from '@/lib/api/errors';
 import { CreatePermitSchema, PermitFilterSchema } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validatePermitReferences } from '@/lib/api/permit-references';
 
 export async function GET(request: NextRequest) {
   try {
@@ -66,6 +67,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as unknown;
     const data = CreatePermitSchema.parse(body);
+    const referenceError = await validatePermitReferences({
+      orgId: auth.orgId,
+      projectId: data.projectId,
+      assigneeId: data.assigneeId,
+    });
+    if (referenceError) return referenceError;
 
     const permit = await prisma.permit.create({
       data: { ...data, orgId: auth.orgId },

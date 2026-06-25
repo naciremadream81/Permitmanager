@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdateChecklistItemSchema, ChecklistItemStatus } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validateChecklistItemReferences } from '@/lib/api/permit-references';
 
 export async function PATCH(
   request: NextRequest,
@@ -18,6 +19,13 @@ export async function PATCH(
 
     const body = await request.json() as unknown;
     const data = UpdateChecklistItemSchema.parse(body);
+    const referenceError = await validateChecklistItemReferences({
+      orgId: auth.orgId,
+      permitId: params.id,
+      parentItemId: data.parentItemId,
+      assigneeId: data.assigneeId,
+    });
+    if (referenceError) return referenceError;
 
     // Auto-set completion fields
     const updateData: Record<string, unknown> = { ...data };
@@ -26,11 +34,22 @@ export async function PATCH(
       updateData.completedById = auth.userId;
     }
 
-    const item = await prisma.checklistItem.update({
-      where: { id: params.itemId },
-      data: updateData,
-      include: { assignee: { select: { id: true, name: true, avatar: true } } },
+    const item = await prisma.$transaction(async (tx) => {
+      const updateResult = await tx.checklistItem.updateMany({
+        where: { id: params.itemId, permitId: params.id },
+        data: updateData,
+      });
+
+      if (updateResult.count !== 1) {
+        return null;
+      }
+
+      return tx.checklistItem.findFirst({
+        where: { id: params.itemId, permitId: params.id },
+        include: { assignee: { select: { id: true, name: true, avatar: true } } },
+      });
     });
+    if (!item) return notFound('Checklist item not found');
 
     await logActivity({
       orgId: auth.orgId,
@@ -59,7 +78,11 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.checklistItem.delete({ where: { id: params.itemId } });
+    const deleteResult = await prisma.checklistItem.deleteMany({
+      where: { id: params.itemId, permitId: params.id },
+    });
+    if (deleteResult.count !== 1) return notFound('Checklist item not found');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);
