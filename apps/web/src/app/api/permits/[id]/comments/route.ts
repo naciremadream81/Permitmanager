@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthContext } from '@/lib/api/auth';
-import { handleApiError, notFound } from '@/lib/api/errors';
+import { badRequest, handleApiError, notFound } from '@/lib/api/errors';
 import { CreateCommentSchema } from '@permitpro/shared';
 
 export async function GET(
@@ -20,6 +20,7 @@ export async function GET(
       include: {
         user: { select: { id: true, name: true, avatar: true } },
         replies: {
+          where: { permitId: params.id },
           include: { user: { select: { id: true, name: true, avatar: true } } },
           orderBy: { createdAt: 'asc' },
         },
@@ -46,6 +47,16 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateCommentSchema.parse(body);
+    if (data.parentCommentId) {
+      const parent = await prisma.comment.findFirst({
+        where: { id: data.parentCommentId, permitId: params.id },
+        select: { id: true },
+      });
+
+      if (!parent) {
+        return badRequest('Parent comment not found');
+      }
+    }
 
     const comment = await prisma.comment.create({
       data: { ...data, permitId: params.id, userId: auth.userId },

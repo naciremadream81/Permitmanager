@@ -5,6 +5,7 @@ import { handleApiError, notFound } from '@/lib/api/errors';
 import { UpdatePermitSchema } from '@permitpro/shared';
 import { validateTransition } from '@permitpro/permit-engine';
 import { logActivity } from '@/lib/api/audit';
+import { validatePermitReferences } from '@/lib/api/permit-references';
 
 export async function GET(
   _req: NextRequest,
@@ -34,7 +35,10 @@ export async function GET(
           where: { parentCommentId: null },
           include: {
             user: { select: { id: true, name: true, avatar: true } },
-            replies: { include: { user: { select: { id: true, name: true, avatar: true } } } },
+            replies: {
+              where: { permitId: params.id },
+              include: { user: { select: { id: true, name: true, avatar: true } } },
+            },
           },
           orderBy: { createdAt: 'desc' },
           take: 20,
@@ -69,6 +73,13 @@ export async function PATCH(
       where: { id: params.id, orgId: auth.orgId },
     });
     if (!current) return notFound('Permit not found');
+
+    const referenceError = await validatePermitReferences({
+      orgId: auth.orgId,
+      projectId: data.projectId,
+      assigneeId: data.assigneeId,
+    });
+    if (referenceError) return referenceError;
 
     // Validate status transition if changing
     if (data.status && data.status !== current.status) {

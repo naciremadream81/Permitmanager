@@ -4,6 +4,7 @@ import { requireAuth, isAuthContext } from '@/lib/api/auth';
 import { handleApiError, notFound } from '@/lib/api/errors';
 import { CreateChecklistItemSchema } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
+import { validateChecklistItemReferences } from '@/lib/api/permit-references';
 
 export async function GET(
   _req: NextRequest,
@@ -21,7 +22,10 @@ export async function GET(
       include: {
         assignee: { select: { id: true, name: true, avatar: true } },
         completedBy: { select: { id: true, name: true } },
-        children: { include: { assignee: { select: { id: true, name: true } } } },
+        children: {
+          where: { permitId: params.id },
+          include: { assignee: { select: { id: true, name: true } } },
+        },
       },
       orderBy: { order: 'asc' },
     });
@@ -45,6 +49,13 @@ export async function POST(
 
     const body = await request.json() as unknown;
     const data = CreateChecklistItemSchema.parse(body);
+    const referenceError = await validateChecklistItemReferences({
+      orgId: auth.orgId,
+      permitId: params.id,
+      parentItemId: data.parentItemId,
+      assigneeId: data.assigneeId,
+    });
+    if (referenceError) return referenceError;
 
     // Auto-assign next order
     const maxResult = await prisma.checklistItem.aggregate({

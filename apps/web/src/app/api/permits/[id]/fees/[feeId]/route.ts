@@ -19,7 +19,16 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateFeeSchema.parse(body);
 
-    const fee = await prisma.fee.update({ where: { id: params.feeId }, data });
+    const updateResult = await prisma.fee.updateMany({
+      where: { id: params.feeId, permitId: params.id },
+      data,
+    });
+    if (updateResult.count !== 1) return notFound('Fee not found');
+
+    const fee = await prisma.fee.findFirst({
+      where: { id: params.feeId, permitId: params.id },
+    });
+    if (!fee) return notFound('Fee not found');
 
     await logActivity({
       orgId: auth.orgId,
@@ -48,7 +57,11 @@ export async function DELETE(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
-    await prisma.fee.delete({ where: { id: params.feeId } });
+    const deleteResult = await prisma.fee.deleteMany({
+      where: { id: params.feeId, permitId: params.id },
+    });
+    if (deleteResult.count !== 1) return notFound('Fee not found');
+
     return NextResponse.json({ success: true });
   } catch (error) {
     return handleApiError(error);
