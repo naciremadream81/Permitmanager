@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { PATCH as patchChecklistItem } from '@/app/api/permits/[id]/checklist/[itemId]/route';
+import { GET as getPermitDetail } from '@/app/api/permits/[id]/route';
 import { POST as createPermit } from '@/app/api/permits/route';
 import { POST as createComment } from '@/app/api/permits/[id]/comments/route';
 
@@ -142,5 +143,32 @@ describe('API authorization scoping', () => {
       select: { id: true },
     });
     expect(mocks.prisma.comment.create).not.toHaveBeenCalled();
+  });
+
+  it('filters permit detail comment replies to the route permit', async () => {
+    await getPermitDetail(
+      new Request('http://localhost/api/permits/33333333-3333-3333-3333-333333333333') as never,
+      {
+        params: {
+          id: '33333333-3333-3333-3333-333333333333',
+        },
+      },
+    );
+
+    expect(mocks.prisma.permit.findFirst).toHaveBeenCalledWith(expect.objectContaining({
+      where: {
+        id: '33333333-3333-3333-3333-333333333333',
+        orgId: mocks.auth.orgId,
+      },
+      include: expect.objectContaining({
+        comments: expect.objectContaining({
+          include: expect.objectContaining({
+            replies: expect.objectContaining({
+              where: { permitId: '33333333-3333-3333-3333-333333333333' },
+            }),
+          }),
+        }),
+      }),
+    }));
   });
 });
