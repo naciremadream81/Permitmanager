@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { requireAuth, isAuthContext } from '@/lib/api/auth';
-import { handleApiError } from '@/lib/api/errors';
+import { handleApiError, notFound } from '@/lib/api/errors';
 import { CreatePermitSchema, PermitFilterSchema } from '@permitpro/shared';
 import { logActivity } from '@/lib/api/audit';
 
@@ -66,6 +66,14 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json() as unknown;
     const data = CreatePermitSchema.parse(body);
+
+    if (data.projectId) {
+      const project = await prisma.project.findFirst({
+        where: { id: data.projectId, orgId: auth.orgId },
+        select: { id: true },
+      });
+      if (!project) return notFound('Project not found');
+    }
 
     const permit = await prisma.permit.create({
       data: { ...data, orgId: auth.orgId },

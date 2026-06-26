@@ -70,6 +70,14 @@ export async function PATCH(
     });
     if (!current) return notFound('Permit not found');
 
+    if (data.projectId) {
+      const project = await prisma.project.findFirst({
+        where: { id: data.projectId, orgId: auth.orgId },
+        select: { id: true },
+      });
+      if (!project) return notFound('Project not found');
+    }
+
     // Validate status transition if changing
     if (data.status && data.status !== current.status) {
       const result = validateTransition(current.status, data.status);

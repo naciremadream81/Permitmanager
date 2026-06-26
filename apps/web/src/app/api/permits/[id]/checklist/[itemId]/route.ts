@@ -16,6 +16,11 @@ export async function PATCH(
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
 
+    const existingItem = await prisma.checklistItem.findFirst({
+      where: { id: params.itemId, permitId: params.id },
+    });
+    if (!existingItem) return notFound('Checklist item not found');
+
     const body = await request.json() as unknown;
     const data = UpdateChecklistItemSchema.parse(body);
 
@@ -58,6 +63,11 @@ export async function DELETE(
 
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
+
+    const existingItem = await prisma.checklistItem.findFirst({
+      where: { id: params.itemId, permitId: params.id },
+    });
+    if (!existingItem) return notFound('Checklist item not found');
 
     await prisma.checklistItem.delete({ where: { id: params.itemId } });
     return NextResponse.json({ success: true });
