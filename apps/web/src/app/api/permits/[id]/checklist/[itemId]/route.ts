@@ -19,6 +19,12 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateChecklistItemSchema.parse(body);
 
+    const existing = await prisma.checklistItem.findFirst({
+      where: { id: params.itemId, permitId: params.id },
+      select: { id: true },
+    });
+    if (!existing) return notFound('Checklist item not found');
+
     // Auto-set completion fields
     const updateData: Record<string, unknown> = { ...data };
     if (data.status === ChecklistItemStatus.COMPLETED) {
@@ -58,6 +64,12 @@ export async function DELETE(
 
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
+
+    const existing = await prisma.checklistItem.findFirst({
+      where: { id: params.itemId, permitId: params.id },
+      select: { id: true },
+    });
+    if (!existing) return notFound('Checklist item not found');
 
     await prisma.checklistItem.delete({ where: { id: params.itemId } });
     return NextResponse.json({ success: true });

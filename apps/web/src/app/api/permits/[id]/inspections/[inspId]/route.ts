@@ -19,6 +19,12 @@ export async function PATCH(
     const body = await request.json() as unknown;
     const data = UpdateInspectionSchema.parse(body);
 
+    const existing = await prisma.inspection.findFirst({
+      where: { id: params.inspId, permitId: params.id },
+      select: { id: true },
+    });
+    if (!existing) return notFound('Inspection not found');
+
     const inspection = await prisma.inspection.update({
       where: { id: params.inspId },
       data,
@@ -50,6 +56,12 @@ export async function DELETE(
 
     const permit = await prisma.permit.findFirst({ where: { id: params.id, orgId: auth.orgId } });
     if (!permit) return notFound('Permit not found');
+
+    const existing = await prisma.inspection.findFirst({
+      where: { id: params.inspId, permitId: params.id },
+      select: { id: true },
+    });
+    if (!existing) return notFound('Inspection not found');
 
     await prisma.inspection.delete({ where: { id: params.inspId } });
     return NextResponse.json({ success: true });

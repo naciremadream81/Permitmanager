@@ -41,6 +41,7 @@ export const CreatePermitSchema = z.object({
   jurisdiction: z.string().optional(),
   agency: z.string().optional(),
   appliedDate: z.string().datetime().optional(),
+  expirationDate: z.string().datetime().optional(),
   estimatedCost: z.number().positive().optional(),
   assigneeId: z.string().uuid().optional(),
   metadata: z.record(z.unknown()).optional(),
