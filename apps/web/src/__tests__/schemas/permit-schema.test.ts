@@ -13,4 +13,30 @@ describe('CreatePermitSchema', () => {
 
     expect(result.expirationDate).toBe(expirationDate);
   });
+
+  it('accepts null for optional fields sent blank by the permit creation form', () => {
+    const result = CreatePermitSchema.parse({
+      type: PermitType.BUILDING,
+      title: 'Building permit',
+      description: null,
+      jurisdiction: null,
+      agency: null,
+      appliedDate: null,
+      expirationDate: null,
+      estimatedCost: null,
+      projectId: null,
+      assigneeId: null,
+    });
+
+    expect(result).toMatchObject({
+      description: null,
+      jurisdiction: null,
+      agency: null,
+      appliedDate: null,
+      expirationDate: null,
+      estimatedCost: null,
+      projectId: null,
+      assigneeId: null,
+    });
+  });
 });
