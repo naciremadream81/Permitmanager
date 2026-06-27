@@ -34,24 +34,25 @@ export const UpdateProjectSchema = CreateProjectSchema.partial();
 // ─── PERMIT ──────────────────────────────────────────────────────────────────────
 
 export const CreatePermitSchema = z.object({
-  projectId: z.string().uuid().optional(),
+  projectId: z.string().uuid().nullable().optional(),
   type: z.nativeEnum(PermitType),
   title: z.string().min(1).max(500),
-  description: z.string().optional(),
-  jurisdiction: z.string().optional(),
-  agency: z.string().optional(),
-  appliedDate: z.string().datetime().optional(),
-  estimatedCost: z.number().positive().optional(),
-  assigneeId: z.string().uuid().optional(),
+  description: z.string().nullable().optional(),
+  jurisdiction: z.string().nullable().optional(),
+  agency: z.string().nullable().optional(),
+  appliedDate: z.string().datetime().nullable().optional(),
+  expirationDate: z.string().datetime().nullable().optional(),
+  estimatedCost: z.number().positive().nullable().optional(),
+  assigneeId: z.string().uuid().nullable().optional(),
   metadata: z.record(z.unknown()).optional(),
 });
 
 export const UpdatePermitSchema = CreatePermitSchema.partial().extend({
   status: z.nativeEnum(PermitStatus).optional(),
-  permitNumber: z.string().optional(),
-  issuedDate: z.string().datetime().optional(),
-  expirationDate: z.string().datetime().optional(),
-  actualCost: z.number().positive().optional(),
+  permitNumber: z.string().nullable().optional(),
+  issuedDate: z.string().datetime().nullable().optional(),
+  expirationDate: z.string().datetime().nullable().optional(),
+  actualCost: z.number().positive().nullable().optional(),
 });
 
 // ─── DOCUMENT ────────────────────────────────────────────────────────────────────
